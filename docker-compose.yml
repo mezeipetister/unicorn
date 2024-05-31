@@ -1,0 +1,23 @@
+services:
+    unicorn_server:
+        build:
+            context: .
+            dockerfile: ServerDockerfile
+        networks:
+            - unicorn_network
+        environment:
+            - ROCKET_PORT=7000
+
+    unicorn_client:
+        build:
+            context: .
+            dockerfile: ClientDockerfile
+        image: unicorn_client
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - unicorn_network
+
+networks:
+    unicorn_network:
+        driver: bridge

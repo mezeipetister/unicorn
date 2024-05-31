@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package unicorn;
+
+service UnicornService {
+    rpc SendLog(LogMessage) returns (google.protobuf.Empty);
+}
+
+message LogMessage {
+    bytes log = 1;
+}

@@ -1,0 +1,42 @@
+:root {
+    --bg-dark: #242423;
+    --bg-light: white;
+    --fg-light: #E8EDDF;
+    --callout: rgb(255, 255, 102);
+    --callout-dark: #101010;
+  }
+  
+  * {
+      font-size: 14px;
+  }
+  
+  html, body, main {
+      background-color: var(--bg-light);
+      color: black;
+      height: 100%;
+  }
+  
+  main {
+      display: flex;
+  }
+  
+  button:hover:not(.active) {
+      filter: brightness(1.15);
+      cursor: pointer;
+  }
+
+  h1 {
+    font-size: 1.5em;
+    span {
+        font-size: 1.5em;
+    }
+  }
+
+.log-entry {
+    white-space: pre-wrap;
+    padding: 0.5em;
+}
+
+.highlight {
+    background-color: green;
+}
