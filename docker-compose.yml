@@ -1,23 +1,19 @@
 services:
     unicorn_server:
-        build:
-            context: .
-            dockerfile: ServerDockerfile
-        networks:
-            - unicorn_network
+        image: unicorn_server
+        network_mode: host
         environment:
             - ROCKET_PORT=7000
+            - RUST_LOG=info
+            - UNICORN_ADDR=[::1]:6000
+        ports:
+            - 7000:7000
 
     unicorn_client:
-        build:
-            context: .
-            dockerfile: ClientDockerfile
         image: unicorn_client
+        network_mode: host
+        environment:
+            - RUST_LOG=info
+            - UNICORN_ADDR=http://localhost:6000
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        networks:
-            - unicorn_network
-
-networks:
-    unicorn_network:
-        driver: bridge

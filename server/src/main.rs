@@ -62,8 +62,6 @@ impl Unicorn {
         }
         // Push logitem
         inner.data.push_back(item.clone());
-
-        println!("{:?}", &item);
     }
 }
 

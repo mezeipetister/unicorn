@@ -1,5 +1,7 @@
 # Start from the official Rust image
-FROM rust:1.78 as builder
+FROM rust:1.78-buster as builder
+
+RUN apt-get update && apt-get install -y protobuf-compiler
 
 # Create a new empty shell project
 WORKDIR /unicorn_root
@@ -11,7 +13,6 @@ ADD ../corelib/ ./corelib
 ADD ../server/ ./server
 ADD ../Cargo.toml ./Cargo.toml
 
-RUN apt-get update && apt-get install -y protobuf-compiler
 
 # This build step will cache your dependencies
 RUN cargo build --release -p client
@@ -21,7 +22,7 @@ RUN rm ./target/release/deps/client*
 RUN cargo build --release -p client
 
 # Our start production image
-FROM debian:trixie-slim
+FROM debian:buster-slim
 RUN apt-get update \
     && apt-get install -y ca-certificates tzdata protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*

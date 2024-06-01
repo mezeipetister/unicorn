@@ -62,7 +62,7 @@ pub async fn run(unicorn: Unicorn) -> Result<(), rocket::Error> {
     let r = rocket::build()
         .mount("/", routes![stream])
         .manage(unicorn)
-        .mount("/", FileServer::from(relative!("static")));
+        .mount("/", FileServer::from("./static"));
 
     r.launch().await?;
 

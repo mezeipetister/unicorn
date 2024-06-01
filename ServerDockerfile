@@ -1,5 +1,7 @@
 # Start from the official Rust image
-FROM rust:1.50 as builder
+FROM rust:1.78-buster as builder
+
+RUN apt-get update && apt-get install -y protobuf-compiler
 
 # Create a new empty shell project
 WORKDIR /unicorn_root
@@ -11,23 +13,25 @@ ADD ../corelib/ ./corelib
 ADD ../server/ ./server
 ADD ../Cargo.toml ./Cargo.toml
 
-RUN apt-get update && apt-get install -y protobuf-compiler
 
 # This build step will cache your dependencies
-RUN cargo build --release -p server
+# RUN cargo build --release -p server
 
 # Build for release
-RUN rm ./target/release/deps/server*
+# RUN rm ./target/release/deps/server*
 RUN cargo build --release -p server
 
 # Our start production image
-FROM debian:trixie-slim
+FROM debian:buster-slim
 RUN apt-get update \
     && apt-get install -y ca-certificates tzdata protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /
+
+COPY --from=builder /unicorn_root/server/static ./static
 # Copy the build artifact from the builder stage
-COPY --from=builder /unicorn_root/target/release/server .
+COPY --from=builder /unicorn_root/target/release/server ./app
 
 # Set the binary as the entrypoint of the container
-ENTRYPOINT ["./server"]
+ENTRYPOINT ["./app"]

@@ -7,7 +7,7 @@ use docker_api::{
 };
 use futures_util::StreamExt;
 use log::info;
-use std::collections::HashMap;
+use std::{collections::HashMap, os::unix::net::SocketAddr};
 use tokio::sync::broadcast::Receiver;
 pub use unicorn::unicorn_service_client::UnicornServiceClient;
 
@@ -57,18 +57,18 @@ async fn start_watcher(
                             if let Some(log) = log {
                                 if let Ok(TtyChunk::StdOut(data)) = log {
                                     // Send log event
-                                    tx.send(Event::Log {
+                                    let _ = tx.send(Event::Log {
                                         container_name: name.clone(),
                                         message: String::from_utf8_lossy(&data).to_string(),
                                         timestamp: Utc::now(),
-                                    }).unwrap();
+                                    });
                                 } else if let Ok(TtyChunk::StdErr(data)) = log {
                                     // Send log event
-                                    tx.send(Event::Log {
+                                    let _ = tx.send(Event::Log {
                                         container_name: name.clone(),
                                         message: String::from_utf8_lossy(&data).to_string(),
                                         timestamp: Utc::now(),
-                                    }).unwrap();
+                                    });
                                 }
                             }
                     }
@@ -160,10 +160,21 @@ impl Logger {
     async fn new() -> Self {
         let (tx, mut rx) = tokio::sync::broadcast::channel::<Event>(10000);
 
+        // Address is valid?
+        // Todo: Implement auto address from environment variable
+        let addr = std::env::var("UNICORN_ADDR").unwrap_or("[::1]:6000".into());
+
         // Create unicorn client
-        let mut unicorn_client = UnicornServiceClient::connect("http://[::1]:6000")
-            .await
-            .expect("Could no connect to unicorn service");
+        let mut unicorn_client = loop {
+            match UnicornServiceClient::connect(addr.clone()).await {
+                Ok(client) => break client,
+                Err(_) => {
+                    info!("Unable to connect to unicorn service, retrying in 5 seconds");
+                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                    continue;
+                }
+            }
+        };
 
         tokio::spawn(async move {
             while let Ok(event) = rx.recv().await {
